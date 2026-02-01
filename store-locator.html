@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carolina Deli Pets - Store Locator</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2D5F3F;
+            --primary-light: #3A7550;
+            --accent: #E8B44C;
+            --text-dark: #1a1a1a;
+            --text-light: #666;
+            --bg-cream: #FBF8F3;
+            --white: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Work Sans', sans-serif;
+            color: var(--text-dark);
+            background-color: var(--bg-cream);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 60px 20px 40px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: var(--white);
+            border-radius: 0 0 30px 30px;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 3rem;
+            margin-bottom: 15px;
+            letter-spacing: -1px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .locator-wrapper {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .store-list {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 30px var(--shadow);
+            max-height: 700px;
+            overflow-y: auto;
+        }
+
+        .store-list h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 15px 45px 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: 'Work Sans', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(45, 95, 63, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 1.2rem;
+        }
+
+        .store-card {
+            background: var(--bg-cream);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .store-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px var(--shadow);
+            border-color: var(--accent);
+        }
+
+        .store-card.active {
+            border-color: var(--primary);
+            background: var(--white);
+        }
+
+        .store-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .store-address {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+        }
+
+        .store-phone {
+            color: var(--text-dark);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .store-distance {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--text-dark);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
+        #map {
+            height: 700px;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px var(--shadow);
+            overflow: hidden;
+        }
+
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            padding: 5px;
+        }
+
+        .popup-content {
+            padding: 10px 5px;
+        }
+
+        .popup-content h3 {
+            font-family: 'DM Serif Display', serif;
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+        }
+
+        .popup-content p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+        }
+
+        .popup-content a {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: var(--primary);
+            color: var(--white);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+
+        .popup-content a:hover {
+            background: var(--primary-light);
+        }
+
+        .info-section {
+            background: var(--white);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px var(--shadow);
+            text-align: center;
+        }
+
+        .info-section h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .info-section p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+            line-height: 1.8;
+            max-width: 800px;
+            margin: 0 auto 30px;
+        }
+
+        .contact-button {
+            display: inline-block;
+            padding: 15px 35px;
+            background: var(--primary);
+            color: var(--white);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .contact-button:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px var(--shadow);
+        }
+
+        @media (max-width: 968px) {
+            .locator-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .store-list {
+                max-height: 400px;
+            }
+
+            #map {
+                height: 500px;
+            }
+
+            .header h1 {
+                font-size: 2.2rem;
+            }
+        }
+
+        /* Custom marker icon styles */
+        .custom-marker {
+            background: var(--primary);
+            width: 35px;
+            height: 35px;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            border: 3px solid var(--white);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+
+        .custom-marker::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: var(--white);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Scrollbar styling */
+        .store-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .store-list::-webkit-scrollbar-track {
+            background: var(--bg-cream);
+            border-radius: 10px;
+        }
+
+        .store-list::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+
+        .store-list::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-light);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🐾 Find Carolina Deli Pets Near You</h1>
+        <p>Discover local retailers carrying our premium pet treats. Call ahead to confirm inventory and hours.</p>
+    </div>
+
+    <div class="container">
+        <div class="locator-wrapper">
+            <div class="store-list">
+                <h2>Store Locations</h2>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search by city, zip, or store name...">
+                    <span class="search-icon">🔍</span>
+                </div>
+                <div id="storeListContainer">
+                    <!-- Store cards will be generated here -->
+                </div>
+            </div>
+            <div id="map"></div>
+        </div>
+
+        <div class="info-section">
+            <h2>Want to Carry Our Products?</h2>
+            <p>Are you a retailer interested in stocking Carolina Deli Pets treats? We'd love to work with you! Reach out to discuss wholesale opportunities and bring premium pet treats to your customers.</p>
+            <a href="mailto:hello@carolinadelipets.com" class="contact-button">Contact Us About Wholesale</a>
+        </div>
+    </div>
+
+    <script>
+        // STORE DATA - EDIT THIS SECTION TO ADD/UPDATE YOUR STORES
+        const stores = [
+            {
+                name: "Pet Paradise - Downtown",
+                address: "123 Main Street, Raleigh, NC 27601",
+                phone: "(919) 555-0100",
+                lat: 35.7796,
+                lng: -78.6382
+            },
+            {
+                name: "Happy Tails Pet Shop",
+                address: "456 Elm Avenue, Durham, NC 27701",
+                phone: "(919) 555-0200",
+                lat: 35.9940,
+                lng: -78.8986
+            },
+            {
+                name: "The Pawsitive Place",
+                address: "789 Oak Boulevard, Chapel Hill, NC 27514",
+                phone: "(919) 555-0300",
+                lat: 35.9132,
+                lng: -79.0558
+            },
+            {
+                name: "Furry Friends Boutique",
+                address: "321 Pine Street, Cary, NC 27511",
+                phone: "(919) 555-0400",
+                lat: 35.7915,
+                lng: -78.7811
+            },
+            {
+                name: "Canine Corner",
+                address: "654 Maple Drive, Apex, NC 27502",
+                phone: "(919) 555-0500",
+                lat: 35.7327,
+                lng: -78.8503
+            }
+        ];
+
+        // Initialize the map centered on North Carolina
+        const map = L.map('map').setView([35.7796, -78.6382], 10);
+
+        // Add tile layer (map style)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 18
+        }).addTo(map);
+
+        // Custom icon for markers
+        const customIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: `<div class="custom-marker"></div>`,
+            iconSize: [35, 35],
+            iconAnchor: [17, 34],
+            popupAnchor: [0, -34]
+        });
+
+        let markers = [];
+
+        // Add markers to map and create store cards
+        function initializeStores() {
+            const storeListContainer = document.getElementById('storeListContainer');
+            storeListContainer.innerHTML = '';
+
+            stores.forEach((store, index) => {
+                // Create marker
+                const marker = L.marker([store.lat, store.lng], { icon: customIcon })
+                    .bindPopup(`
+                        <div class="popup-content">
+                            <h3>${store.name}</h3>
+                            <p><strong>${store.address}</strong></p>
+                            <p>📞 ${store.phone}</p>
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=${store.lat},${store.lng}" target="_blank">Get Directions</a>
+                        </div>
+                    `)
+                    .addTo(map);
+
+                markers.push({ marker, store, element: null });
+
+                // Create store card
+                const card = document.createElement('div');
+                card.className = 'store-card';
+                card.innerHTML = `
+                    <div class="store-name">${store.name}</div>
+                    <div class="store-address">${store.address}</div>
+                    <div class="store-phone">📞 ${store.phone}</div>
+                `;
+
+                // Add click event to card
+                card.addEventListener('click', () => {
+                    map.setView([store.lat, store.lng], 14);
+                    marker.openPopup();
+                    
+                    // Highlight active card
+                    document.querySelectorAll('.store-card').forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+                });
+
+                markers[index].element = card;
+                storeListContainer.appendChild(card);
+            });
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            
+            markers.forEach(({ marker, store, element }) => {
+                const matchesSearch = 
+                    store.name.toLowerCase().includes(searchTerm) ||
+                    store.address.toLowerCase().includes(searchTerm) ||
+                    store.phone.includes(searchTerm);
+
+                if (matchesSearch) {
+                    element.style.display = 'block';
+                    marker.addTo(map);
+                } else {
+                    element.style.display = 'none';
+                    map.removeLayer(marker);
+                }
+            });
+
+            // If search is empty, show all
+            if (searchTerm === '') {
+                markers.forEach(({ marker, element }) => {
+                    element.style.display = 'block';
+                    marker.addTo(map);
+                });
+            }
+        });
+
+        // Initialize everything
+        initializeStores();
+
+        // Adjust map bounds to show all markers
+        if (stores.length > 0) {
+            const bounds = L.latLngBounds(stores.map(s => [s.lat, s.lng]));
+            map.fitBounds(bounds, { padding: [50, 50] });
+        }
+    </script>
+</body>
+</html>
