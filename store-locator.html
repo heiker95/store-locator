@@ -336,47 +336,61 @@
         <div class="info-section">
             <h2>Want to Carry Our Products?</h2>
             <p>Are you a retailer interested in stocking Carolina Deli Pets treats? We'd love to work with you! Reach out to discuss wholesale opportunities and bring premium pet treats to your customers.</p>
-            <a href="mailto:hello@carolinadelipets.com" class="contact-button">Contact Us About Wholesale</a>
+            <a href="/cdn-cgi/l/email-protection#0f676a6363604f6c6e7d606366616e6b6a63667f6a7b7c216c6062" class="contact-button">Contact Us About Wholesale</a>
         </div>
     </div>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         // STORE DATA - EDIT THIS SECTION TO ADD/UPDATE YOUR STORES
         const stores = [
             {
-                name: "Pet Paradise - Downtown",
-                address: "123 Main Street, Raleigh, NC 27601",
-                phone: "(919) 555-0100",
-                lat: 35.7796,
-                lng: -78.6382
+                name: "Cliff's Corner Meat Market",
+                address: "100 West Main Street, Carrboro, NC 27510",
+                phone: "(919) 942-2196",
+                lat: 35.91038,
+                lng: -79.07254
             },
             {
-                name: "Happy Tails Pet Shop",
-                address: "456 Elm Avenue, Durham, NC 27701",
-                phone: "(919) 555-0200",
+                name: "Nanny Goat Market: Downtown Durham",
+                address: "620 Foster Street, Unit G, Durham, NC 27701",
+                phone: "(919) 237-2545",
                 lat: 35.9940,
-                lng: -78.8986
+                lng: -78.9018
             },
             {
-                name: "The Pawsitive Place",
-                address: "789 Oak Boulevard, Chapel Hill, NC 27514",
-                phone: "(919) 555-0300",
+                name: "Nanny Goat Market: RTP",
+                address: "3151 Elion Drive, Durham, NC 27709",
+                phone: "(919) 377-2200",
                 lat: 35.9132,
-                lng: -79.0558
+                lng: -78.8558
             },
             {
-                name: "Furry Friends Boutique",
-                address: "321 Pine Street, Cary, NC 27511",
-                phone: "(919) 555-0400",
-                lat: 35.7915,
-                lng: -78.7811
+                name: "Finders & Seekers Emporium",
+                address: "23 Rectory Street, Suite C, Pittsboro, NC 27312",
+                phone: "(919) 533-6530",
+                lat: 35.7201,
+                lng: -79.1772
             },
             {
-                name: "Canine Corner",
-                address: "654 Maple Drive, Apex, NC 27502",
-                phone: "(919) 555-0500",
-                lat: 35.7327,
-                lng: -78.8503
+                name: "West End Kitchen",
+                address: "23 Rectory St, Suite B, Pittsboro, NC 27312",
+                phone: "(919) 545-5505",
+                lat: 35.7201,
+                lng: -79.1772
+            },
+            {
+                name: "Chatham Marketplace",
+                address: "480 Hillsboro Street, Pittsboro, NC 27312",
+                phone: "(919) 542-2643",
+                lat: 35.7188,
+                lng: -79.1769
+            },
+            {
+                name: "The Beerded Lady Bottle Shop",
+                address: "1350 5th Avenue, Garner, NC 27529",
+                phone: "(984) 200-0598",
+                lat: 35.7113,
+                lng: -78.6143
             }
         ];
 
@@ -477,9 +491,4 @@
 
         // Adjust map bounds to show all markers
         if (stores.length > 0) {
-            const bounds = L.latLngBounds(stores.map(s => [s.lat, s.lng]));
-            map.fitBounds(bounds, { padding: [50, 50] });
-        }
-    </script>
-</body>
-</html>
+            const
