@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carolina Deli Pets - Store Locator</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * {
             margin: 0;
@@ -154,6 +156,53 @@
             height: 100vh;
         }
 
+        /* Custom popup styling */
+        .leaflet-popup-content-wrapper {
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+        }
+
+        .leaflet-popup-content {
+            margin: 16px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .popup-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: #111;
+            margin-bottom: 8px;
+        }
+
+        .popup-address {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 6px;
+        }
+
+        .popup-phone {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .popup-directions {
+            display: inline-block;
+            padding: 8px 14px;
+            background: #84acd0;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+
+        .popup-directions:hover {
+            background: #6a93bc;
+        }
+
         /* Scrollbar */
         .store-list::-webkit-scrollbar {
             width: 6px;
@@ -197,6 +246,29 @@
             #map {
                 height: 50vh;
             }
+        }
+
+        /* Custom marker */
+        .custom-marker-icon {
+            background: #84acd0;
+            width: 30px;
+            height: 30px;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            border: 3px solid #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .custom-marker-icon::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
     </style>
 </head>
@@ -277,88 +349,47 @@
             }
         ];
 
-        let map;
+        // Initialize map
+        const map = L.map('map', {
+            zoomControl: true,
+            scrollWheelZoom: true
+        }).setView([35.7796, -78.6382], 10);
+
+        // Add map tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 18
+        }).addTo(map);
+
+        // Custom marker icon
+        const customIcon = L.divIcon({
+            className: 'custom-marker',
+            html: '<div class="custom-marker-icon"></div>',
+            iconSize: [30, 30],
+            iconAnchor: [15, 30],
+            popupAnchor: [0, -30]
+        });
+
         let markers = [];
-        let infoWindows = [];
+        let storeElements = [];
 
-        // Initialize Google Map
-        function initMap() {
-            // Create map centered on North Carolina
-            map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 10,
-                center: { lat: 35.7796, lng: -78.6382 },
-                mapTypeControl: false,
-                streetViewControl: false,
-                styles: [
-                    {
-                        featureType: "poi",
-                        elementType: "labels",
-                        stylers: [{ visibility: "off" }]
-                    }
-                ]
-            });
-
-            const bounds = new google.maps.LatLngBounds();
-
-            // Create store list and markers
+        // Initialize stores
+        function initStores() {
             const storeList = document.getElementById('storeList');
             storeList.innerHTML = '';
 
             stores.forEach((store, index) => {
-                const position = { lat: store.lat, lng: store.lng };
-                
-                // Create custom marker with Carolina blue
-                const marker = new google.maps.Marker({
-                    position: position,
-                    map: map,
-                    title: store.name,
-                    icon: {
-                        path: google.maps.SymbolPath.CIRCLE,
-                        fillColor: '#84acd0',
-                        fillOpacity: 1,
-                        strokeColor: '#ffffff',
-                        strokeWeight: 3,
-                        scale: 12
-                    }
-                });
-
-                // Create info window
-                const infoWindow = new google.maps.InfoWindow({
-                    content: `
-                        <div style="font-family: 'Inter', sans-serif; padding: 8px;">
-                            <div style="font-weight: 600; font-size: 15px; color: #111; margin-bottom: 8px;">
-                                ${store.name}
-                            </div>
-                            <div style="font-size: 14px; color: #666; line-height: 1.5; margin-bottom: 6px;">
-                                ${store.address}
-                            </div>
-                            <div style="font-size: 14px; color: #666; margin-bottom: 12px;">
-                                ${store.phone}
-                            </div>
-                            <a href="https://www.google.com/maps/dir/?api=1&destination=${store.lat},${store.lng}" 
-                               target="_blank" 
-                               style="display: inline-block; padding: 8px 14px; background: #84acd0; color: #fff; 
-                                      text-decoration: none; border-radius: 5px; font-size: 13px; font-weight: 500;">
-                                Get Directions
-                            </a>
-                        </div>
-                    `
-                });
-
-                // Marker click handler
-                marker.addListener('click', () => {
-                    // Close all info windows
-                    infoWindows.forEach(iw => iw.close());
-                    // Open this one
-                    infoWindow.open(map, marker);
-                    // Center map
-                    map.setCenter(position);
-                    map.setZoom(14);
-                });
-
-                markers.push({ marker, store, infoWindow, element: null });
-                infoWindows.push(infoWindow);
-                bounds.extend(position);
+                // Create marker
+                const marker = L.marker([store.lat, store.lng], { icon: customIcon })
+                    .bindPopup(`
+                        <div class="popup-name">${store.name}</div>
+                        <div class="popup-address">${store.address}</div>
+                        <div class="popup-phone">${store.phone}</div>
+                        <a href="https://www.google.com/maps/dir/?api=1&destination=${store.lat},${store.lng}" 
+                           target="_blank" 
+                           class="popup-directions">Get Directions</a>
+                    `)
+                    .addTo(map);
 
                 // Create list item
                 const storeItem = document.createElement('div');
@@ -374,20 +405,12 @@
                        class="directions-link">Get Directions →</a>
                 `;
 
-                // Store item click handler
+                // Click handler
                 storeItem.addEventListener('click', (e) => {
                     if (e.target.tagName !== 'A') {
                         e.preventDefault();
-                        
-                        // Close all info windows
-                        infoWindows.forEach(iw => iw.close());
-                        
-                        // Open this one
-                        infoWindow.open(map, marker);
-                        
-                        // Center map
-                        map.setCenter(position);
-                        map.setZoom(14);
+                        map.setView([store.lat, store.lng], 14);
+                        marker.openPopup();
                         
                         // Highlight active
                         document.querySelectorAll('.store-item').forEach(item => {
@@ -398,11 +421,15 @@
                 });
 
                 storeList.appendChild(storeItem);
-                markers[index].element = storeItem;
+                markers.push({ marker, store, element: storeItem });
+                storeElements.push(storeItem);
             });
 
-            // Fit map to show all markers
-            map.fitBounds(bounds);
+            // Fit all markers
+            if (stores.length > 0) {
+                const bounds = L.latLngBounds(stores.map(s => [s.lat, s.lng]));
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
         }
 
         // Search functionality
@@ -418,11 +445,11 @@
 
                 if (matches) {
                     element.style.display = 'block';
-                    marker.setVisible(true);
+                    marker.addTo(map);
                     visibleCount++;
                 } else {
                     element.style.display = 'none';
-                    marker.setVisible(false);
+                    map.removeLayer(marker);
                 }
             });
 
@@ -436,16 +463,13 @@
 
             // Reset view if search is cleared
             if (searchTerm === '') {
-                const bounds = new google.maps.LatLngBounds();
-                stores.forEach(s => bounds.extend({ lat: s.lat, lng: s.lng }));
-                map.fitBounds(bounds);
+                const bounds = L.latLngBounds(stores.map(s => [s.lat, s.lng]));
+                map.fitBounds(bounds, { padding: [50, 50] });
             }
         });
-    </script>
-    
-    <!-- Load Google Maps API -->
-    <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_HERE&callback=initMap">
+
+        // Initialize
+        initStores();
     </script>
 </body>
 </html>
